@@ -11,23 +11,18 @@ import java.util.Objects;
  * @author hecto
  */
 public class Entrenador {
-    private static int contadorEntrenadores = 1;
     private int id;
     private String nom;
     private String password;
 
-    public Entrenador(String nom, String pasaword) {
-        this.id = contadorEntrenadores++;
+    public Entrenador(String nom, String password) {
+        this.id = 0;
         this.nom = nom;
-        this.password = pasaword;
+        this.password = password;
     }
-
+    
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
         
     public String getNom() {
@@ -38,12 +33,12 @@ public class Entrenador {
         this.nom = nom;
     }
 
-    public String getPasaword() {
+    public String getPassword() {
         return password;
     }
 
-    public void setPasaword(String pasaword) {
-        this.password = pasaword;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     @Override
@@ -64,7 +59,7 @@ public class Entrenador {
             return false;
         }
         final Entrenador other = (Entrenador) obj;
-        return this.nom == other.nom;
+        return this.nom.equalsIgnoreCase(nom);
     }
 
     @Override

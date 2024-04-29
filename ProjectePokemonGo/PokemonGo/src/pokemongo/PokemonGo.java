@@ -39,6 +39,7 @@ public class PokemonGo {
             /* mostrar menu con 0 debe salir prorgama con otras opciones mostrar una frase "Has dado en la opcion {X}"*/
             boolean exit = false;
             MenuPokemon menu = new MenuPokemon();
+            demanarUserPassword();
             mostrarMenu(menu);
             int opcion = menu.escogerOption();
             entrenador = new DAOEntrenador();
@@ -53,7 +54,7 @@ public class PokemonGo {
                         altaEntrenador();
                         break;
                     case 2:
-                        borrarEntrenador();
+                        esborrarEntrenador();
                         break;
                     case 3:
                         consultaEntrenador();
@@ -88,13 +89,14 @@ public class PokemonGo {
         try {
             Scanner sc = new Scanner(System.in);
             int insertado;
-            System.out.print("Pon el nombre del nuevo entrenador:");
+            System.out.print("Pon el nombre del nuevo entrenador: ");
             String nom = sc.nextLine();
-            System.out.print("Pon el password:");
+            System.out.print("Pon el password: ");
             String password = sc.nextLine();
+            
             Entrenador nuevo = new Entrenador(nom, password);
             //comprobar alta
-            if (!(entrenador.existeEntrenador(nom))) {
+            if (!(entrenador.existeixEntrenador(nom))) {
                 //llamar al DAO
                 insertado = entrenador.altaEntrenador(nuevo);
                 if (insertado > 0) {
@@ -110,8 +112,24 @@ public class PokemonGo {
         }
     }
     
-    private void borrarEntrenador() {
-        
+    private void esborrarEntrenador() {
+        boolean eliminado;
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Escribe el nombre del entrenador que quiere borrrar: ");
+        String nom = sc.nextLine();
+        Entrenador antiguo = new Entrenador(nom);
+            //comprobar alta
+            if (entrenador.existeixEntrenador(nom)) {
+                //llamar al DAO
+                eliminado = entrenador.esborrarEntrenador(antiguo);
+                if (eliminado == true) {
+                    System.out.println("Entrenador " + nom + " eliminado");
+                } else {
+                    System.out.println("Error al eliminar el entrenador");
+                }
+            } else {
+                System.out.println("Este entrenador no existe");
+            }
     }
     private void consultaEntrenador() {
         
@@ -124,6 +142,39 @@ public class PokemonGo {
     }
     private void listarTodosPokemons() {
         
+    }
+    
+    private void demanarUserPassword() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("USER: ");
+        String user = sc.nextLine();
+        System.out.print("PASSWORD: ");
+        String password = sc.nextLine();
+        Entrenador comprobar = new Entrenador(user, password);
+        int insertado;
+        try {
+            if (!(entrenador.existeixEntrenador(user))) {
+                //Si no existe, dar de alta
+                insertado = entrenador.altaEntrenador(comprobar);
+                if (insertado > 0) {
+                    System.out.println("Benvingut " + user);
+                } else {
+                    System.out.println("Error al insertar el usuario");
+                }   
+            } else {
+                //Si existe, comprobar password
+                if (comprobar.getPassword().equals(password)) {
+                    System.out.println("Password correcto");
+                    System.out.println("Benvingut " + user);
+                } else {
+                    System.out.println("PASSWORD INCORRECTO");
+                    salir();
+                }
+                System.out.println("Este entrenador ya existe");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(PokemonGo.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     private void crearDB() {

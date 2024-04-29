@@ -15,6 +15,12 @@ public class Entrenador {
     private String nom;
     private String password;
 
+    public Entrenador(String nom) {
+        this.id = 0;
+        this.nom = nom;
+        this.password = "password";
+    }
+    
     public Entrenador(String nom, String password) {
         this.id = 0;
         this.nom = nom;

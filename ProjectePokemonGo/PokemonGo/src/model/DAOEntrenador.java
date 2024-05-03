@@ -8,12 +8,13 @@ import BD.DBConnect;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
-import java.sql.CallableStatement;
+//import java.sql.CallableStatement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.sql.ResultSet;
+import java.sql.*;
 /**
  *
  * @author hema5364
@@ -28,59 +29,94 @@ public class DAOEntrenador {    //Data Access Object
     public int altaEntrenador(Entrenador trainer) throws SQLException {
         int rows = 0;
         if (conn_principal != null) {
-            //Query
-            String query = "INSERT INTO entrenador (nom, password) VALUES (?,?)";
-            System.out.println(query);
-            PreparedStatement preparedQuery = conn_principal.prepareStatement(query);
-            preparedQuery.setString(1, trainer.getNom());
-            preparedQuery.setString(2, trainer.getPassword());
-            rows = preparedQuery.executeUpdate();
+            if (!existeixEntrenador(trainer.getNom())) {
+                String query = "INSERT INTO Entrenador (nom, password) VALUES (?,?)";
+                System.out.println(query);
+                PreparedStatement preparedQuery = conn_principal.prepareStatement(query);
+                preparedQuery.setString(1, trainer.getNom().toUpperCase());
+                preparedQuery.setString(2, trainer.getPassword().toUpperCase());
+                rows = preparedQuery.executeUpdate();
+            }
+            else {
+                rows = 0;
+            }
         }
         return rows;
     }
-    public Boolean esborrarEntrenador(Entrenador antiguo) {
-        Boolean borrado = null;
+    public Entrenador esborrarEntrenador(String nom) {
+        //Modificar esta parte en CASA //Si el entrenador no existe = NULL
+        //Si existe, devuelve el entrenador
         try {
-            String query = "DELETE FROM `entrenador` WHERE `entrenador`.`nom` = '?';";
-            System.out.println(query);
-            PreparedStatement preparedQuery = conn_principal.prepareStatement(query);
-            preparedQuery.setString(1, antiguo.getNom());
-            preparedQuery.executeUpdate();
-            borrado = true;
+            if (conn_principal != null) {
+                Entrenador antiguo = devolverEntrenador(nom);
+                if (existeixEntrenador(antiguo.getNom())) {
+                    String query = "DELETE FROM Entrenador WHERE nom = '?';";
+                    System.out.println(query);
+                    PreparedStatement preparedQuery = conn_principal.prepareStatement(query);
+                    preparedQuery.setString(1, antiguo.getNom());
+                    preparedQuery.executeUpdate();
+                    return antiguo;
+                } else {
+                    return null;
+                }
+            }
         } catch (SQLException ex) {
             Logger.getLogger(DAOEntrenador.class.getName()).log(Level.SEVERE, null, ex);
-            borrado = null;
         }
-        return borrado;
+        return null;    
     }
-    public boolean existeixEntrenador(String name) {
-        boolean existe = false;
-        //Fer una consulta y si existe...
-        String query = "CALL existeixNomEntrenador(?,?); SELECT @existe";
-        System.out.println(query);
-        try {
+    public boolean existeixEntrenador(String name) throws SQLException {
+        if (conn_principal != null){
+            /*
+            String query = "CALL existeixNomEntrenador(?,?); SELECT @existe";
+            System.out.println(query);
+            try {
             CallableStatement callabledQuery = conn_principal.prepareCall(query);
             callabledQuery.setString(1, name);
             existe = callabledQuery.getBoolean(2);
             //devolver true
             return existe;
             //si no existe, devolver false
-        } catch (SQLException ex) {
+
+            } catch (SQLException ex) {
             System.out.println("Error de conexion " + ex.getMessage());
+            }
+            */
+            Statement stmt = conn_principal.createStatement();
+            String query = "SELECT id, nom, password FROM Entrenador WHERE UPPER(nom) = '" + name.toUpperCase() + "'";
+            System.out.println(query);
+            String query2 = "SELECT COUNT(*) FROM Entrenador WHERE UPPER(nom) = '" + name.toUpperCase() + "'";
+            System.out.println(query2);
+            //ResultSet cursor = stmt.executeQuery(query);
+            ResultSet cursor = stmt.executeQuery(query2);
+            if (cursor.next()) {
+                int registros = cursor.getInt(1);
+                if (registros  == 1) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
         }
-        return existe;
+        return false;
     }
     public List<Entrenador> totsEntrenadors() {
         List<Entrenador> listado = new ArrayList<>();
         try {
-            String query = "SELECT nom, password FROM entrenador";
-            PreparedStatement preparedQuery = conn_principal.prepareStatement(query);
-            ResultSet rs = preparedQuery.executeQuery();
-            while (rs.next()) {
-                String nom = rs.getString("nom");
-                String password = rs.getString("password");
-                Entrenador trainer = new Entrenador(nom, password);
-                listado.add(trainer);
+            if (conn_principal != null) {
+                String query = "SELECT id, nom, password FROM entrenador";
+                Statement stmt = conn_principal.createStatement();
+                ResultSet cursor = stmt.executeQuery(query);
+                while (cursor.next()) {
+                    String nom = cursor.getString("nom");
+                    String password = cursor.getString("password");
+                    int id = cursor.getInt("id");
+                    Entrenador trainer = new Entrenador(nom, password);
+                    listado.add(trainer);
+                }
+                cursor.close();
             }
             return listado;
         } catch (SQLException ex) {
@@ -88,7 +124,8 @@ public class DAOEntrenador {    //Data Access Object
         }
         return listado;
     }
-    public Entrenador devolverEntrenador(String name) {
+    public Entrenador devolverEntrenador(String name) throws SQLException {
+        /*
         String query = "CALL existeixNomEntrenador(?,?); SELECT @existe";
         System.out.println(query);
         try {
@@ -105,6 +142,21 @@ public class DAOEntrenador {    //Data Access Object
             }
         } catch (SQLException ex) {
             System.out.println("Error de conexion " + ex.getMessage());
+        }
+        */
+        if (conn_principal != null) {
+            Statement stmt = conn_principal.createStatement();
+            String query = "SELECT id, nom, password FROM Entrenador WHERE UPPER(nom) = '" + name.toUpperCase() + "'";
+            ResultSet cursor = stmt.executeQuery(query);
+            if (cursor.next()) {    //existe //FETCH
+                int id = cursor.getInt("id");
+                String nom = cursor.getString("nom");
+                String password = cursor.getString("password");
+                Entrenador trainer = new Entrenador(nom, password);
+                return trainer;
+            } else {
+                return null;
+            }
         }
         return null;
     }

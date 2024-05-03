@@ -14,6 +14,7 @@ import java.sql.Connection;
 import BD.DBConnect;
 import java.sql.SQLException;
 import java.sql.*;
+import java.util.List;
 import java.util.Scanner;
 import model.*;
 
@@ -39,37 +40,44 @@ public class PokemonGo {
             /* mostrar menu con 0 debe salir prorgama con otras opciones mostrar una frase "Has dado en la opcion {X}"*/
             boolean exit = false;
             MenuPokemon menu = new MenuPokemon();
-            demanarUserPassword();
-            mostrarMenu(menu);
-            int opcion = menu.escogerOption();
             entrenador = new DAOEntrenador();
-            do {
-                switch (opcion) {
-                    case 0:
-                        exit = true;
-                        salir();
-                        System.out.println("Saliendo...");
-                        break;
-                    case 1:
-                        altaEntrenador();
-                        break;
-                    case 2:
-                        esborrarEntrenador();
-                        break;
-                    case 3:
-                        consultaEntrenador();
-                        break;
-                    case 4:
-                        cazarPokemon();
-                        break;
-                    case 5:
-                        listarMochila();
-                        break;
-                    case 6:
-                        listarTodosPokemons();
-                        break;
-                }
-            } while(!exit);
+            boolean existe_nuevo = demanarUserPassword();
+            mostrarMenu(menu);
+            if (existe_nuevo) {
+                do {
+                    int opcion = menu.escogerOption();
+                    switch (opcion) {
+                        case 0:
+                            exit = true;
+                            salir();
+                            System.out.println("Saliendo...");
+                            break;
+                        case 1:
+                            altaEntrenador();
+                            break;
+                        case 2:
+                            esborrarEntrenador();
+                            break;
+                        case 3:
+                            consultaEntrenador();
+                            break;
+                        case 4:
+                            cazarPokemon();
+                            break;
+                        case 5:
+                            totsEntrenadors();
+                            break;
+                        case 6:
+                            listarMochila();
+                            break;
+                        case 7:
+                            listarTodosPokemons();
+                            break;
+                    }
+                } while(!exit);
+            } else {
+                System.out.println("No has acertado el password ");
+            }
         } catch (ClassNotFoundException | SQLException ex) {
             System.out.println(ex.getMessage());
         }
@@ -81,8 +89,9 @@ public class PokemonGo {
         menu.addOpcion("2.- Dar de baja entrenador");
         menu.addOpcion("3.-Consultar entrenador");
         menu.addOpcion("4.-Cazar pokemon");
-        menu.addOpcion("5.-Listar Pokemons cazados.");
-        menu.addOpcion("6.-Listar tipos Pokemon existentes en juego.");
+        menu.addOpcion("5.-Listar entrenadores");
+        menu.addOpcion("6.-Listar Pokemons cazados.");
+        menu.addOpcion("7.-Listar tipos Pokemon existentes en juego.");
         menu.verCompleto(menu);
     }
     private void altaEntrenador() {
@@ -96,16 +105,11 @@ public class PokemonGo {
             
             Entrenador nuevo = new Entrenador(nom, password);
             //comprobar alta
-            if (!(entrenador.existeixEntrenador(nom))) {
-                //llamar al DAO
-                insertado = entrenador.altaEntrenador(nuevo);
-                if (insertado > 0) {
-                    System.out.println("Se ha insertado el nuevo entrenador");
-                } else {
-                    System.out.println("Error insertando entrenador");
-                }
+            insertado = entrenador.altaEntrenador(nuevo);
+            if (insertado > 0) {
+                System.out.println("Se ha insertado el nuevo entrenador");
             } else {
-                System.out.println("Este entrenador ya existe");
+                System.out.println("Error insertando entrenador");
             }
         } catch (SQLException ex) {
             System.out.println("Error SQL insertando entrenador " + ex.getMessage());
@@ -113,16 +117,15 @@ public class PokemonGo {
     }
     
     private void esborrarEntrenador() {
-        boolean eliminado;
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Escribe el nombre del entrenador que quiere borrrar: ");
-        String nom = sc.nextLine();
-        Entrenador antiguo = new Entrenador(nom);
+        try {
+            Entrenador eliminado = null;
+            Scanner sc = new Scanner(System.in);
+            System.out.print("Escribe el nombre del entrenador que quiere borrrar: ");
+            String nom = sc.nextLine();
             //comprobar alta
             if (entrenador.existeixEntrenador(nom)) {
-                //llamar al DAO
-                eliminado = entrenador.esborrarEntrenador(antiguo);
-                if (eliminado == true) {
+                eliminado = entrenador.esborrarEntrenador(nom);
+                if (eliminado != null) {
                     System.out.println("Entrenador " + nom + " eliminado");
                 } else {
                     System.out.println("Error al eliminar el entrenador");
@@ -130,6 +133,9 @@ public class PokemonGo {
             } else {
                 System.out.println("Este entrenador no existe");
             }
+        } catch (SQLException ex) {
+            Logger.getLogger(PokemonGo.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     private void consultaEntrenador() {
         
@@ -144,36 +150,33 @@ public class PokemonGo {
         
     }
     
-    private void demanarUserPassword() {
-        Scanner sc = new Scanner(System.in);
-        System.out.print("USER: ");
-        String user = sc.nextLine();
-        System.out.print("PASSWORD: ");
-        String password = sc.nextLine();
-        Entrenador comprobar = new Entrenador(user, password);
-        int insertado;
-        try {
-            if (!(entrenador.existeixEntrenador(user))) {
-                //Si no existe, dar de alta
-                insertado = entrenador.altaEntrenador(comprobar);
-                if (insertado > 0) {
-                    System.out.println("Benvingut " + user);
-                } else {
-                    System.out.println("Error al insertar el usuario");
-                }   
+    private boolean demanarUserPassword() {
+        try {        
+            Scanner sc = new Scanner(System.in);
+            System.out.print("USER: ");
+            String user = sc.nextLine();
+            System.out.print("PASSWORD: ");
+            String password = sc.nextLine();
+            //Entrenador comprobar = new Entrenador(user, password);
+            if (!entrenador.existeixEntrenador(user)) { //Si no existe, dar de alta
+                entrenador.altaEntrenador(new Entrenador(user, password));
+                return true;
             } else {
                 //Si existe, comprobar password
+                Entrenador comprobar = entrenador.devolverEntrenador(user);
                 if (comprobar.getPassword().equals(password)) {
                     System.out.println("Password correcto");
                     System.out.println("Benvingut " + user);
+                    return true;
                 } else {
                     System.out.println("PASSWORD INCORRECTO");
-                    salir();
+                    //salir();
+                    return false;
                 }
-                System.out.println("Este entrenador ya existe");
             }
         } catch (SQLException ex) {
             Logger.getLogger(PokemonGo.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
     }
     
@@ -281,5 +284,20 @@ public class PokemonGo {
         } catch (SQLException ex) {
             Logger.getLogger(PokemonGo.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private void totsEntrenadors() {
+        //demanar coses usuari
+        
+        //no n'hi
+        
+        //interaccio DAO
+        List<Entrenador> todos = entrenador.totsEntrenadors();
+        System.out.println("Todos los entrenadores Pokemon");
+        //informar usuari
+        for (Object trainer : todos) {
+            System.out.println(trainer);
+        }
+        System.out.println("Numero de entrenadores: " + todos.size());
     }
 }

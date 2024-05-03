@@ -72,10 +72,9 @@ public class Entrenador {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Entrenador{");
-        sb.append("nombre=").append(nom);
-        sb.append("contraseña=").append(password);
+        sb.append(" nombre=").append(nom);
+        sb.append(" contraseña=").append(password);
         sb.append("}");
         return sb.toString();
-    }
-    
+    }    
 }

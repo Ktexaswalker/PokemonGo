@@ -24,6 +24,7 @@ import model.*;
  */
 public class PokemonGo {
     DAOEntrenador entrenador;
+    DAOPokedex pokedex;
     /**
      * @param args the command line arguments
      */
@@ -38,43 +39,12 @@ public class PokemonGo {
             crearDB();
             mostrarLogo();
             /* mostrar menu con 0 debe salir prorgama con otras opciones mostrar una frase "Has dado en la opcion {X}"*/
-            boolean exit = false;
-            MenuPokemon menu = new MenuPokemon();
+            
             entrenador = new DAOEntrenador();
+            pokedex = new DAOPokedex();
             boolean existe_nuevo = demanarUserPassword();
-            mostrarMenu(menu);
             if (existe_nuevo) {
-                do {
-                    int opcion = menu.escogerOption();
-                    switch (opcion) {
-                        case 0:
-                            exit = true;
-                            salir();
-                            System.out.println("Saliendo...");
-                            break;
-                        case 1:
-                            altaEntrenador();
-                            break;
-                        case 2:
-                            esborrarEntrenador();
-                            break;
-                        case 3:
-                            consultaEntrenador();
-                            break;
-                        case 4:
-                            cazarPokemon();
-                            break;
-                        case 5:
-                            totsEntrenadors();
-                            break;
-                        case 6:
-                            listarMochila();
-                            break;
-                        case 7:
-                            listarTodosPokemons();
-                            break;
-                    }
-                } while(!exit);
+                programa();
             } else {
                 System.out.println("No has acertado el password ");
             }
@@ -87,11 +57,11 @@ public class PokemonGo {
         menu.addOpcion("0.- Salir");
         menu.addOpcion("1.- Dar de alta entrenador");
         menu.addOpcion("2.- Dar de baja entrenador");
-        menu.addOpcion("3.-Consultar entrenador");
-        menu.addOpcion("4.-Cazar pokemon");
-        menu.addOpcion("5.-Listar entrenadores");
-        menu.addOpcion("6.-Listar Pokemons cazados.");
-        menu.addOpcion("7.-Listar tipos Pokemon existentes en juego.");
+        menu.addOpcion("3.- Consultar entrenador");
+        menu.addOpcion("4.- Cazar pokemon");
+        menu.addOpcion("5.- Listar entrenadores");
+        menu.addOpcion("6.- Listar Pokemons cazados.");
+        menu.addOpcion("7.- Listar tipos Pokemon existentes en juego.");
         menu.verCompleto(menu);
     }
     private void altaEntrenador() {
@@ -138,10 +108,24 @@ public class PokemonGo {
         }
     }
     private void consultaEntrenador() {
-        
+        Entrenador trainer = null;
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Escribe el nombre del entrenador que quieres consultar: ");
+        String name = sc.nextLine();
+        try {
+            trainer = entrenador.devolverEntrenador(name.toUpperCase());
+            if (trainer != null) {
+                System.out.println(trainer);
+            } else {
+                System.out.println("El entrenador no existe");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(PokemonGo.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     private void cazarPokemon() {
-        
+        Pokedex aparecido = pokedex.getPokemonRandom();
+        System.out.println(aparecido);
     }
     private void listarMochila() {
         
@@ -287,11 +271,6 @@ public class PokemonGo {
     }
 
     private void totsEntrenadors() {
-        //demanar coses usuari
-        
-        //no n'hi
-        
-        //interaccio DAO
         List<Entrenador> todos = entrenador.totsEntrenadors();
         System.out.println("Todos los entrenadores Pokemon");
         //informar usuari
@@ -299,5 +278,42 @@ public class PokemonGo {
             System.out.println(trainer);
         }
         System.out.println("Numero de entrenadores: " + todos.size());
+    }
+
+    private void programa() {
+        boolean exit = false;
+            MenuPokemon menu = new MenuPokemon();
+            mostrarMenu(menu);
+        do {
+            int opcion = menu.escogerOption();
+            switch (opcion) {
+                case 0:
+                    exit = true;
+                    salir();
+                    System.out.println("Saliendo...");
+                    break;
+                case 1:
+                    altaEntrenador();
+                    break;
+                case 2:
+                    esborrarEntrenador();
+                    break;
+                case 3:
+                    consultaEntrenador();
+                    break;
+                case 4:
+                    cazarPokemon();
+                    break;
+                case 5:
+                    totsEntrenadors();
+                    break;
+                case 6:
+                    listarMochila();
+                    break;
+                case 7:
+                    listarTodosPokemons();
+                    break;
+            }
+        } while(!exit);
     }
 }

@@ -8,7 +8,6 @@ import BD.DBConnect;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
-//import java.sql.CallableStatement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -48,14 +47,16 @@ public class DAOEntrenador {    //Data Access Object
         //Si existe, devuelve el entrenador
         try {
             if (conn_principal != null) {
-                Entrenador antiguo = devolverEntrenador(nom);
-                if (existeixEntrenador(antiguo.getNom())) {
-                    String query = "DELETE FROM Entrenador WHERE nom = '?';";
+                if (existeixEntrenador(nom)) {
+                    Entrenador antiguo = devolverEntrenador(nom);
+                    String query = "DELETE FROM Entrenador WHERE UPPER(nom) = ?;";
                     System.out.println(query);
                     PreparedStatement preparedQuery = conn_principal.prepareStatement(query);
                     preparedQuery.setString(1, antiguo.getNom());
-                    preparedQuery.executeUpdate();
-                    return antiguo;
+                    int row = preparedQuery.executeUpdate();
+                    if (row > 0) {
+                        return antiguo;
+                    }
                 } else {
                     return null;
                 }
@@ -67,21 +68,6 @@ public class DAOEntrenador {    //Data Access Object
     }
     public boolean existeixEntrenador(String name) throws SQLException {
         if (conn_principal != null){
-            /*
-            String query = "CALL existeixNomEntrenador(?,?); SELECT @existe";
-            System.out.println(query);
-            try {
-            CallableStatement callabledQuery = conn_principal.prepareCall(query);
-            callabledQuery.setString(1, name);
-            existe = callabledQuery.getBoolean(2);
-            //devolver true
-            return existe;
-            //si no existe, devolver false
-
-            } catch (SQLException ex) {
-            System.out.println("Error de conexion " + ex.getMessage());
-            }
-            */
             Statement stmt = conn_principal.createStatement();
             String query = "SELECT id, nom, password FROM Entrenador WHERE UPPER(nom) = '" + name.toUpperCase() + "'";
             System.out.println(query);
@@ -125,25 +111,6 @@ public class DAOEntrenador {    //Data Access Object
         return listado;
     }
     public Entrenador devolverEntrenador(String name) throws SQLException {
-        /*
-        String query = "CALL existeixNomEntrenador(?,?); SELECT @existe";
-        System.out.println(query);
-        try {
-            CallableStatement callabledQuery = conn_principal.prepareCall(query);
-            callabledQuery.setString(1, name);
-            if (callabledQuery.getBoolean(2)) {
-                String queryExiste = "SELECT * FROM entrenador";
-                PreparedStatement preparedQuery = conn_principal.prepareStatement(queryExiste);
-                ResultSet rs = preparedQuery.executeQuery();
-                String nom = rs.getString("nom");
-                String password = rs.getString("password");
-                Entrenador trainer = new Entrenador(nom, password);
-                return trainer;
-            }
-        } catch (SQLException ex) {
-            System.out.println("Error de conexion " + ex.getMessage());
-        }
-        */
         if (conn_principal != null) {
             Statement stmt = conn_principal.createStatement();
             String query = "SELECT id, nom, password FROM Entrenador WHERE UPPER(nom) = '" + name.toUpperCase() + "'";

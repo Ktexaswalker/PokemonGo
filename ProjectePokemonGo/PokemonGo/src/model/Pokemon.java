@@ -14,6 +14,12 @@ public class Pokemon {
     private String nom;
     private int fuerza;
 
+    public Pokemon(String nom) {
+        this.nom = nom;
+        randomFuerza();
+        this.fuerza = getFuerza();
+    }
+    
     public Pokemon(String nom, int fuerza) {
         this.nom = nom;
         this.fuerza = fuerza;
@@ -26,11 +32,18 @@ public class Pokemon {
     public void setNom(String nom) {
         this.nom = nom;
     }
-
+    
     public int getFuerza() {
         return fuerza;
     }
 
+    public void randomFuerza() {
+        int min = 1;
+        int max = 100;
+        int fuerza = (int) (Math.random()*(max - min) + min);
+        setFuerza(fuerza);
+    }
+    
     public void setFuerza(int fuerza) {
         this.fuerza = fuerza;
     }
@@ -60,7 +73,7 @@ public class Pokemon {
         StringBuilder sb = new StringBuilder();
         sb.append("Pokemon{");
         sb.append("nom=").append(nom);
-        sb.append("força=").append(fuerza);
+        sb.append(" força=").append(fuerza);
         sb.append("}");
         return sb.toString();
     }

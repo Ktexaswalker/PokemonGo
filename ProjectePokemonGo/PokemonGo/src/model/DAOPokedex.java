@@ -23,10 +23,10 @@ public class DAOPokedex {
     public DAOPokedex() throws SQLException {
         this.conn_principal = DBConnect.getConnection();
     }
-    public Pokedex getPokemonRandom() {
+    public List<Pokedex> getPokemons() throws SQLException {
         List<Pokedex> allPokedex = new ArrayList<>();
-        int pokemons = 0;
-        try {
+        int pokemons;
+        if (conn_principal != null) {
             Statement stmt = conn_principal.createStatement();
             String query = "SELECT * FROM pokedex";
             ResultSet cursor;
@@ -38,12 +38,38 @@ public class DAOPokedex {
                 Pokedex pokemon = new Pokedex(id, nom, tipus);
                 allPokedex.add(pokemon);
             }
-            pokemons = allPokedex.size();
-            Random rd = new Random();
-            int valor = rd.nextInt(pokemons);
-            return allPokedex.get(valor);
-        } catch (SQLException ex) {
-            Logger.getLogger(DAOPokedex.class.getName()).log(Level.SEVERE, null, ex);
+            cursor.close();
+        }
+        return allPokedex;
+    }
+    public Pokedex getPokemonRandom() throws SQLException {
+        List<Pokedex> allPokedex = getPokemons();
+        int max = allPokedex.size();
+        int pokemons;
+        pokemons = allPokedex.size();
+        Random rd = new Random();
+        int valor = rd.nextInt(pokemons);
+        return allPokedex.get(valor);
+    }
+    public Pokedex getPokemon(int id) {
+        if (conn_principal != null){
+            try {
+                Statement stmt = conn_principal.createStatement();
+                String query = "SELECT * FROM Pokedex WHERE id_pokemon = " + id;
+                System.out.println(query);
+                ResultSet cursor = stmt.executeQuery(query);
+                if (cursor.next()) {
+                    int id_pokemon = cursor.getInt("id_pokemon");
+                    String nom = cursor.getString("nom");
+                    String tipus = cursor.getString("tipus");
+                    Pokedex poke = new Pokedex(id_pokemon, nom, tipus);
+                    return poke;
+                } else {
+                    return null;
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(DAOPokedex.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         return null;
     }

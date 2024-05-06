@@ -127,6 +127,10 @@ public class DAOEntrenador {    //Data Access Object
         }
         return null;
     }
+
+    //recorrer la lista de entrenadores y preguntar si el nombre, es el actual user
+    
+    
     public void cerrarConexion() throws SQLException {
         conn_principal.close();
     }

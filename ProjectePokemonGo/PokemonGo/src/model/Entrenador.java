@@ -27,6 +27,19 @@ public class Entrenador {
         this.password = password;
     }
     
+    public Entrenador(int id, String nom, String password) {
+        this.id = id;
+        this.nom = nom;
+        this.password = password;
+    }
+    
+    public Entrenador(int id) {
+        this.id = id;
+        this.nom = "";
+        this.password = "";
+        
+    }
+    
     public int getId() {
         return id;
     }

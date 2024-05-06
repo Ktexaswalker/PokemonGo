@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS Pokedex (
 	id_pokemon INT(4) NOT NULL,
 	nom VARCHAR(50) UNIQUE,
 	tipus VARCHAR(50) DEFAULT NULL,
-        PRIMARY KEY (`num`)
+        PRIMARY KEY (`id_pokemon`)
 );
 
 CREATE TABLE IF NOT EXISTS Mochila (
@@ -40,8 +40,19 @@ VALUES
 
 INSERT INTO `Pokedex` ( `id_pokemon`, `nom`, `tipus`) 
 VALUES
-(1,UPPER('Bulbasur'), 'planta'),
-(5,UPPER('Charmeleon'), 'fuego');
+(1, UPPER('Caterpie'), 'planta'),
+(2, UPPER('Blastoise'), 'agua'),
+(3, UPPER('Bulbasaur'), 'planta'),
+(4, UPPER('Bulbasur'), 'planta'),
+(5, UPPER('Charizard'), 'fuego'),
+(6, UPPER('Charmaleon'), 'fuego'),
+(7, UPPER('Charmander'), 'fuego'),
+(8, UPPER('Ivisaur'), 'planta'),
+(9, UPPER('Pikachu'), 'electrico'),
+(10, UPPER('Squirtle'), 'agua'),
+(11, UPPER('Venusaur'), 'planta'),
+(12, UPPER('Wartortle'), 'agua'),
+(13,UPPER('Dito'), 'raro');
 
 INSERT INTO `Mochila` ( `id`, `id_pokemon`, `fuerza`) 
 VALUES

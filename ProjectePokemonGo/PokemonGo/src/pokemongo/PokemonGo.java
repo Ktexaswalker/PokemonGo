@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.sql.Connection;
 import BD.DBConnect;
+import java.io.File;
 import java.sql.SQLException;
 import java.sql.*;
 import java.util.List;
@@ -25,6 +26,8 @@ import model.*;
 public class PokemonGo {
     DAOEntrenador entrenador;
     DAOPokedex pokedex;
+    DAOMochila mochila;
+    private int UserID;
     /**
      * @param args the command line arguments
      */
@@ -59,9 +62,10 @@ public class PokemonGo {
         menu.addOpcion("2.- Dar de baja entrenador");
         menu.addOpcion("3.- Consultar entrenador");
         menu.addOpcion("4.- Cazar pokemon");
-        menu.addOpcion("5.- Listar entrenadores");
-        menu.addOpcion("6.- Listar Pokemons cazados.");
-        menu.addOpcion("7.- Listar tipos Pokemon existentes en juego.");
+        menu.addOpcion("5.- Mostrar pokedex");
+        menu.addOpcion("6.- Listar entrenadores");
+        menu.addOpcion("7.- Listar Pokemons cazados.");
+        menu.addOpcion("8.- Listar tipos Pokemon existentes en juego.");
         menu.verCompleto(menu);
     }
     private void altaEntrenador() {
@@ -124,14 +128,39 @@ public class PokemonGo {
         }
     }
     private void cazarPokemon() {
-        Pokedex aparecido = pokedex.getPokemonRandom();
-        System.out.println(aparecido);
+        try {
+            DAOMochila inventario = new DAOMochila();
+            Pokedex aparecido = pokedex.getPokemonRandom();
+            System.out.println(aparecido);
+            mostrarPoke(aparecido);
+            //int id = UserID;
+            //int id_pokemon = aparecido.getId_pokemon();
+            Pokemon pokeball = new Pokemon(aparecido.getNom());
+            pokeball.randomFuerza();
+            int fuerza = pokeball.getFuerza();
+            //inventario.darCaptura(id, id_pokemon, fuerza);
+            inventario.darCaptura(UserID, aparecido.getId_pokemon(), fuerza);
+            System.out.println("ENTRENADOR: " + UserID + "POKEDEX: " + aparecido.getId_pokemon() + " FUERZA: " + fuerza);
+            //mochila.darCaptura(UserID, aparecido.getId_pokemon(), fuerza);
+            //inventario.toString();
+        } catch (SQLException ex) {
+            Logger.getLogger(PokemonGo.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     private void listarMochila() {
-        
+        //Listar cazados
     }
-    private void listarTodosPokemons() {
-        
+    private void listarTodosPokemons() {    //Listar Pokemons existentes
+        try {
+            List<Pokedex> todos = pokedex.getPokemons();
+            System.out.println("Todos los Pokemons");
+            for (Object pokes : todos) {
+                System.out.println(pokes);
+            }
+            System.out.println("Numero de Pokemons: " + todos.size());
+        } catch (SQLException ex) {
+            Logger.getLogger(PokemonGo.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     private boolean demanarUserPassword() {
@@ -144,6 +173,7 @@ public class PokemonGo {
             //Entrenador comprobar = new Entrenador(user, password);
             if (!entrenador.existeixEntrenador(user)) { //Si no existe, dar de alta
                 entrenador.altaEntrenador(new Entrenador(user, password));
+                guardarEntrenador(user);
                 return true;
             } else {
                 //Si existe, comprobar password
@@ -151,6 +181,7 @@ public class PokemonGo {
                 if (comprobar.getPassword().equals(password)) {
                     System.out.println("Password correcto");
                     System.out.println("Benvingut " + user);
+                    guardarEntrenador(user);
                     return true;
                 } else {
                     System.out.println("PASSWORD INCORRECTO");
@@ -243,16 +274,14 @@ public class PokemonGo {
             Caratula titulo = new Caratula(rutalogo);
             /* recuperar datos fichero de caratula */
             ArrayList<String> array = titulo.recuperarDatos();
-            /* mostrar por pantalla caratula
-            recorrer arrayList Strings y mostrarlo por pantalla*/
+            /* mostrar por pantalla caratula recorrer arrayList Strings y mostrarlo por pantalla*/
             /*  OPCION A
                     for (String string : array) {
                         System.out.println(string);
                     }
                 OPCION B */
             for (int i = 0; i < array.size(); i++) {
-                //array.get(i);
-                System.out.println(array.get(i));
+                System.out.println(array.get(i));   //array.get(i);
             }
         } catch (FileNotFoundException ex) {
             System.out.println(ex);
@@ -305,15 +334,69 @@ public class PokemonGo {
                     cazarPokemon();
                     break;
                 case 5:
-                    totsEntrenadors();
+                    mostrarPokedex();
                     break;
                 case 6:
-                    listarMochila();
+                    totsEntrenadors();
                     break;
                 case 7:
+                    listarMochila();
+                    break;
+                case 8:
                     listarTodosPokemons();
                     break;
             }
         } while(!exit);
+    }
+
+    private void mostrarPoke(Pokedex poke) {
+        try {
+            Caratula dibujo = new Caratula("src/pokes/default.pok");
+            String rutapoke = "src/pokes/" + poke.getNom().toLowerCase() + ".pok";
+            File ruta = new File(rutapoke);
+            if (ruta.exists()) {
+                dibujo = new Caratula(rutapoke);
+            }
+            ArrayList<String> array = dibujo.recuperarDatos();
+            for (String string : array) {
+                System.out.println(string);
+            }
+        } catch (FileNotFoundException ex) {
+            System.out.println(ex);
+        } catch (IOException ex) {
+            System.out.println(ex);
+        }
+    }
+
+    private void mostrarPokedex() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Elige el pokemon que quieres mostrar(id): ");
+        int id = sc.nextInt();
+        Pokedex poke = pokedex.getPokemon(id);
+        if ( poke != null) {
+            mostrarPoke(poke);
+            Pokemon pokefort = new Pokemon(poke.getNom());
+            //System.out.println(pokefort.getFuerza());
+            System.out.println(pokefort.toString());
+        } else {
+            try {
+                System.out.println("No existe este Pokemon");
+                Caratula dibujo = new Caratula("src/pokes/default.pok");
+                ArrayList<String> array = dibujo.recuperarDatos();
+                for (String string : array) {
+                    System.out.println(string);
+                }
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(PokemonGo.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(PokemonGo.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private void guardarEntrenador(String user) {
+        Entrenador trainer = new Entrenador(user);
+        int id = trainer.getId();
+        UserID = id;
     }
 }

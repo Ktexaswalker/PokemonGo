@@ -29,9 +29,30 @@ public class Pokedex {
         StringBuilder sb = new StringBuilder();
         sb.append("Pokedex{");
         sb.append("id_pokemon=").append(id_pokemon);
-        sb.append("nom=").append(nom);
-        sb.append("tipus=").append(tipus);
+        sb.append(" nom=").append(nom);
+        sb.append(" tipus=").append(tipus);
         sb.append("}");
         return sb.toString();
     }
+
+    public int getId_pokemon() {
+        return id_pokemon;
+    }
+    
+    public String getNom() {
+        return nom;
+    }
+
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+
+    public String getTipus() {
+        return tipus;
+    }
+
+    public void setTipus(String tipus) {
+        this.tipus = tipus;
+    }
+    
 }

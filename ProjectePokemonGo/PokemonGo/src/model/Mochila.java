@@ -75,6 +75,12 @@ public class Mochila {
         this.fuerza = fuerza;
     }
 
+    public void SoltarPokemon(int id, int id_pokemon, int fuerza) {
+        this.id = id;
+        this.id_pokemon = id_pokemon;
+        this.fuerza = fuerza;
+    }
+    
     @Override
     public String toString() {
         return "Mochila{" + "listado=" + listado + ", id=" + id + ", id_pokemon=" + id_pokemon + ", fuerza=" + fuerza + '}';

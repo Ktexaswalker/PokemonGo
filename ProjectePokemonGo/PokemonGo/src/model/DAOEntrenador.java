@@ -119,7 +119,7 @@ public class DAOEntrenador {    //Data Access Object
                 int id = cursor.getInt("id");
                 String nom = cursor.getString("nom");
                 String password = cursor.getString("password");
-                Entrenador trainer = new Entrenador(nom, password);
+                Entrenador trainer = new Entrenador(id, nom, password);
                 return trainer;
             } else {
                 return null;
@@ -127,9 +127,6 @@ public class DAOEntrenador {    //Data Access Object
         }
         return null;
     }
-
-    //recorrer la lista de entrenadores y preguntar si el nombre, es el actual user
-    
     
     public void cerrarConexion() throws SQLException {
         conn_principal.close();

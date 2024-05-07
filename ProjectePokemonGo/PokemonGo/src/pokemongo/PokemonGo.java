@@ -27,7 +27,7 @@ public class PokemonGo {
     DAOEntrenador entrenador;
     DAOPokedex pokedex;
     DAOMochila mochila;
-    private int UserID;
+    Entrenador login;
     /**
      * @param args the command line arguments
      */
@@ -45,6 +45,7 @@ public class PokemonGo {
             
             entrenador = new DAOEntrenador();
             pokedex = new DAOPokedex();
+            mochila = new DAOMochila();
             boolean existe_nuevo = demanarUserPassword();
             if (existe_nuevo) {
                 programa();
@@ -66,6 +67,8 @@ public class PokemonGo {
         menu.addOpcion("6.- Listar entrenadores");
         menu.addOpcion("7.- Listar Pokemons cazados.");
         menu.addOpcion("8.- Listar tipos Pokemon existentes en juego.");
+        menu.addOpcion("9.- Mostrar programa");
+        menu.addOpcion("10.-Liberar pokemon");
         menu.verCompleto(menu);
     }
     private void altaEntrenador() {
@@ -139,16 +142,33 @@ public class PokemonGo {
             pokeball.randomFuerza();
             int fuerza = pokeball.getFuerza();
             //inventario.darCaptura(id, id_pokemon, fuerza);
-            inventario.darCaptura(UserID, aparecido.getId_pokemon(), fuerza);
-            System.out.println("ENTRENADOR: " + UserID + "POKEDEX: " + aparecido.getId_pokemon() + " FUERZA: " + fuerza);
-            //mochila.darCaptura(UserID, aparecido.getId_pokemon(), fuerza);
+            //inventario.darCaptura(UserID, aparecido.getId_pokemon(), fuerza);
+            System.out.println("ENTRENADOR: " + login.getId() + "POKEDEX: " + aparecido.getId_pokemon() + " FUERZA: " + fuerza);
+            mochila.darCaptura(login.getId(), aparecido.getId_pokemon(), fuerza);
             //inventario.toString();
         } catch (SQLException ex) {
             Logger.getLogger(PokemonGo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     private void listarMochila() {
-        //Listar cazados
+        List<Mochila> cazados = mochila.getCaza(login.getId());
+        for (Mochila cazado : cazados) {
+            String nombre = pokedex.getNombrePokemon(cazado.getId_pokemon());
+            if (nombre != null) {
+                System.out.println(nombre + " - " + cazado.getFuerza());
+            }
+        }
+        System.out.println("Tienes " + cazados.size() + " pokemons");
+    }
+    private void listarMochilaOrdenada() {
+        List<Mochila> pokeballs = mochila.getPokemonsCapturadosOrdenats(login.getId());
+        for (Mochila pokeball : pokeballs) {
+            String nombre = pokedex.getNombrePokemon(pokeball.getId_pokemon());
+            if (nombre != null) {
+                System.out.println(nombre + " - " + pokeball.getFuerza());
+            }
+        }
+        System.out.println("Tienes " + pokeballs.size() + " pokemons");
     }
     private void listarTodosPokemons() {    //Listar Pokemons existentes
         try {
@@ -173,15 +193,16 @@ public class PokemonGo {
             //Entrenador comprobar = new Entrenador(user, password);
             if (!entrenador.existeixEntrenador(user)) { //Si no existe, dar de alta
                 entrenador.altaEntrenador(new Entrenador(user, password));
-                guardarEntrenador(user);
+                login = entrenador.devolverEntrenador(user);
+                //guardarEntrenador();
                 return true;
             } else {
                 //Si existe, comprobar password
-                Entrenador comprobar = entrenador.devolverEntrenador(user);
-                if (comprobar.getPassword().equals(password)) {
+                login = entrenador.devolverEntrenador(user);
+                if (login.getPassword().equals(password)) {
                     System.out.println("Password correcto");
                     System.out.println("Benvingut " + user);
-                    guardarEntrenador(user);
+                    //guardarEntrenador(comprobar);
                     return true;
                 } else {
                     System.out.println("PASSWORD INCORRECTO");
@@ -340,10 +361,17 @@ public class PokemonGo {
                     totsEntrenadors();
                     break;
                 case 7:
-                    listarMochila();
+                    //listarMochila();
+                    listarMochilaOrdenada();
                     break;
                 case 8:
                     listarTodosPokemons();
+                    break;
+                case 9:
+                    mostrarPrograma();
+                    break;
+                case 10:
+                    liberarPokemon();
                     break;
             }
         } while(!exit);
@@ -394,9 +422,43 @@ public class PokemonGo {
         }
     }
 
-    private void guardarEntrenador(String user) {
-        Entrenador trainer = new Entrenador(user);
-        int id = trainer.getId();
-        UserID = id;
+    private void guardarEntrenador(Entrenador user) {
+        System.out.println("ID ENTRENADOR : " + user.getId());
+        login = user;
+    }
+
+    private void mostrarPrograma() {
+        MenuPokemon menu = new MenuPokemon();
+        mostrarMenu(menu);
+    }
+
+    private void liberarPokemon() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Ha escogido la opcion de soltar un pokemon de su mochila");
+        List<Mochila> pokeballs = mochila.getPokemonsCapturadosOrdenats(login.getId());
+        for (Mochila pokeball : pokeballs) {
+            String nombre = pokedex.getNombrePokemon(pokeball.getId_pokemon());
+            if (nombre != null) {
+                System.out.println((pokeballs.indexOf(pokeball) + 1) + "\t" + nombre + " - " + pokeball.getFuerza());                
+            }
+        }
+        System.out.println("Tienes " + pokeballs.size() + " pokemons");
+        System.out.print("Elige el indice de pokemon que desea liberar: ");
+        int indice = sc.nextInt();
+        if (indice <= pokeballs.size() && indice > 0) {
+            System.out.println("Vas a liberar a : " + pokedex.getNombrePokemon(pokeballs.get(indice-1).getId_pokemon()));
+            System.out.println("Estas seguro de soltarlo? (si/no)");
+            String respuesta = sc.next();
+            if (respuesta.equalsIgnoreCase("si")) {
+                mochila.SoltarPokemon(login.getId(), pokeballs.get(indice -1).getId_pokemon(), pokeballs.get(indice-1).getFuerza());
+                System.out.println("Has liberado a " + pokedex.getNombrePokemon(pokeballs.get(indice-1).getId_pokemon())
+                        + ". Ahora tienes " + (pokeballs.size()-1) + " pokemons");
+            } else {
+                System.out.println(pokedex.getNombrePokemon(pokeballs.get(indice-1).getId_pokemon()) + " sigue contigo");
+                System.out.println("Sigues teniendo " + pokeballs.size() + " pokemons");
+            }
+        } else {
+            System.err.println("Numero fuera de rango");
+        }        
     }
 }

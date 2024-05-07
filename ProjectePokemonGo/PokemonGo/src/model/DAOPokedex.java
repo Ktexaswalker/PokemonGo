@@ -73,4 +73,28 @@ public class DAOPokedex {
         }
         return null;
     }
+    
+    public String getNombrePokemon(int id_pokemon) {
+        if (conn_principal != null) {
+            try {
+                Statement stmt = conn_principal.createStatement();
+                String query = "SELECT nom FROM Pokedex WHERE id_pokemon = " + id_pokemon;
+                System.out.println(query);
+                ResultSet cursor = stmt.executeQuery(query);
+                if (cursor.next()) {
+                    String nom = cursor.getString("nom");
+                    return nom;
+                } else {
+                return null;
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(DAOPokedex.class.getName()).log(Level.SEVERE, null, ex);
+            }   
+        }
+        return null;
+    }
+    
+    public void cerrarConexion() throws SQLException {
+        conn_principal.close();
+    }
 }

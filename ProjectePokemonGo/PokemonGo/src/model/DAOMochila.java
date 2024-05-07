@@ -21,6 +21,7 @@ import java.util.logging.Logger;
  */
 public class DAOMochila {
     Connection conn_principal;
+    
     public DAOMochila() throws SQLException {
         conn_principal = DBConnect.getConnection(); //conexion abierta hasta el final
     }
@@ -32,9 +33,12 @@ public class DAOMochila {
                 String query = "INSERT INTO Mochila (id, id_pokemon, fuerza) VALUES (?,?,?)";
                 System.out.println(query);
                 PreparedStatement preparedQuery = conn_principal.prepareStatement(query);
-                preparedQuery.setInt(1, pokeball.getId());
-                preparedQuery.setInt(2, pokeball.getId_pokemon());
-                preparedQuery.setInt(3, pokeball.getFuerza());
+                //preparedQuery.setInt(1, pokeball.getId());
+                //preparedQuery.setInt(2, pokeball.getId_pokemon());
+                //preparedQuery.setInt(3, pokeball.getFuerza());
+                preparedQuery.setInt(1, id_coach);
+                preparedQuery.setInt(2, num_pokemon);
+                preparedQuery.setInt(3, CP);
                 rows = preparedQuery.executeUpdate();
                 if (rows > 0) {
                     return true;
@@ -67,6 +71,85 @@ public class DAOMochila {
             cursor.close();
         }
         return allPokedex;
+    }
+    
+    public List<Mochila> getCaza(int id_player) {
+        List <Mochila> cazados = new ArrayList<>();
+        int rows = 0;
+        if (conn_principal != null) {
+            try {
+                String query = "SELECT id, id_pokemon, fuerza FROM mochila WHERE id = ? ";
+                PreparedStatement preparedQuery = conn_principal.prepareStatement(query);
+                preparedQuery.setInt(1, id_player);
+                ResultSet cursor = preparedQuery.executeQuery();
+                while(cursor.next()) {
+                    int id = cursor.getInt(1);
+                    int id_pokemon = cursor.getInt(2);
+                    int fuerza = cursor.getInt(3);
+                    Mochila cazado = new Mochila(id, id_pokemon, fuerza);
+                    cazados.add(cazado);
+                }
+                cursor.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(DAOMochila.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return cazados;
+    }
+    
+    public List<Mochila> getPokemonsCapturadosOrdenats(int id_trainer) {
+        List<Mochila> mochila = new ArrayList<>();
+        if (conn_principal != null) {
+            try {
+                //Juntar los campos comunes de id_pokemon de las tablas mochila y pokedex
+                String query = "SELECT m.id, m.id_pokemon, m.fuerza, p.nom "
+                        + "FROM mochila AS m "
+                        + "INNER JOIN pokedex AS p "
+                        + "ON m.id_pokemon = p.id_pokemon "
+                        + "WHERE m.id = ? ORDER BY p.nom ASC, m.fuerza DESC";
+                System.out.println(query);
+                PreparedStatement preparedQuery = conn_principal.prepareStatement(query);
+                preparedQuery.setInt(1, id_trainer);
+                ResultSet cursor = preparedQuery.executeQuery();
+                while (cursor.next()) {
+                    int id_pokemon = cursor.getInt("m.id_pokemon");
+                    int fuerza = cursor.getInt("m.fuerza");
+                    Mochila pokeball = new Mochila(id_trainer, id_pokemon, fuerza);
+                    mochila.add(pokeball);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(DAOMochila.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return mochila;
+    }
+    
+    public Mochila SoltarPokemon(int id_entrenador, int id_pokemon, int id_fuerza) {
+        if (conn_principal != null) {
+            try {
+                String query = "DELETE FROM mochila WHERE id = ? AND id_pokemon = ? AND fuerza = ?";
+                PreparedStatement stmt = conn_principal.prepareStatement(query);
+                stmt.setInt(1, id_entrenador);
+                stmt.setInt(2, id_pokemon);
+                stmt.setInt(3, id_fuerza);
+                int rowsAffected = stmt.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    // Se eliminó una fila, entonces se devuelve un nuevo objeto Mochila
+                    return new Mochila(id_entrenador, id_pokemon, id_fuerza);
+                } else {
+                    // No se eliminó ninguna fila
+                    return null;
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(DAOMochila.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return null;
+    }
+    
+    public void cerrarConexion() throws SQLException {
+        conn_principal.close();
     }
 }
 
